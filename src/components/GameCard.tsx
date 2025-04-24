@@ -1,79 +1,62 @@
+// src/components/GameCard.tsx
 import { Game } from "@/types";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Star } from "lucide-react";
 
 interface GameCardProps {
   game: Game;
-  isLoading?: boolean; // Add optional loading prop
 }
 
-export function GameCard({ game, isLoading = false }: GameCardProps) {
-  // Format price display
-  const formatPrice = () => {
-    if (game.isFree) return "Free";
-    if (game.discountPercent && game.discountPercent > 0) {
-      const discountedPrice = game.price * (1 - game.discountPercent / 100);
-      return (
-        <div className="flex items-center gap-2">
-          <span className="line-through text-muted-foreground">${game.price.toFixed(2)}</span>
-          <span className="font-medium">${discountedPrice.toFixed(2)}</span>
-          <Badge variant="destructive" className="ml-1">-{game.discountPercent}%</Badge>
-        </div>
-      );
-    }
-    return `$${game.price.toFixed(2)}`;
-  };
-
+const GameCard = ({ game }: GameCardProps) => {
+  // ONLY check reviewCount - ignore averageRating completely
+  // This is critical to ensure consistency with the detail page
+  const hasReviews = typeof game.reviewCount === 'number' && game.reviewCount > 0;
+  
   return (
-    <Link 
-      to={`/games/${game.id}`}
-      className={`transition-opacity duration-200 ${isLoading ? 'opacity-60 pointer-events-none' : ''}`}
-    >
-      <Card className="h-full hover:shadow-md transition-shadow overflow-hidden">
-        <div className="relative aspect-video overflow-hidden">
+    <Card className="overflow-hidden transition-all hover:shadow-md h-full flex flex-col">
+      <Link to={`/games/${game.id}`} className="flex-shrink-0">
+        <div className="aspect-video relative overflow-hidden bg-muted">
           <img
-            src={game.coverImage || '/placeholder-game.jpg'}
+            src={game.coverImage || "/placeholder-game.jpg"}
             alt={game.title}
-            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+            className="object-cover w-full h-full"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "/placeholder-game.jpg";
+            }}
           />
-          
-          {game.isEarlyAccess && (
-            <Badge className="absolute top-2 left-2 bg-amber-500">Early Access</Badge>
-          )}
+        </div>
+      </Link>
+      <CardContent className="p-4 flex-grow">
+        <Link to={`/games/${game.id}`} className="hover:underline">
+          <h3 className="font-semibold text-lg truncate">{game.title}</h3>
+        </Link>
+        <p className="text-sm text-muted-foreground truncate">
+          {game.genre || "Uncategorized"}
+        </p>
+        {game.description && (
+          <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+            {game.description}
+          </p>
+        )}
+      </CardContent>
+      <CardFooter className="p-4 pt-0 flex justify-between items-center border-t mt-auto">
+        <div className="text-sm text-muted-foreground truncate max-w-[60%]">
+          {game.createdBy?.username || game.company?.name || "Unknown Developer"}
         </div>
         
-        <CardHeader className="pb-2">
-          <div className="flex justify-between items-start">
-            <h3 className="font-bold text-lg line-clamp-1">{game.title}</h3>
-            <div className="flex items-center gap-1 text-yellow-500">
-              <span className="text-sm">{game.rating.toFixed(1)}</span>
-              <span>★</span>
-            </div>
+        {/* ONLY show rating if hasReviews is true */}
+        {hasReviews ? (
+          <div className="flex items-center">
+            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400 mr-1" />
+            <span className="text-sm font-medium">
+              {game.averageRating.toFixed(1)}
+            </span>
           </div>
-          <div className="flex flex-wrap gap-1 mt-1">
-            {game.genres.slice(0, 2).map((genre) => (
-              <Badge key={genre} variant="outline" className="text-xs">
-                {genre}
-              </Badge>
-            ))}
-          </div>
-        </CardHeader>
-        
-        <CardContent className="pb-2">
-          <p className="text-muted-foreground text-sm line-clamp-2">
-            {game.description || "No description available."}
-          </p>
-        </CardContent>
-        
-        <CardFooter className="flex justify-between pt-0">
-          <div className="text-sm">
-            <span className="text-muted-foreground mr-1">by</span>
-            <span className="font-medium">{game.developer}</span>
-          </div>
-          <div className="font-semibold">{formatPrice()}</div>
-        </CardFooter>
-      </Card>
-    </Link>
+        ) : null}
+      </CardFooter>
+    </Card>
   );
-}
+};
+
+export default GameCard;

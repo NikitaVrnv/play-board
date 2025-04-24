@@ -1,71 +1,112 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { Link, useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+// src/pages/Login.tsx
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Eye, EyeOff } from "lucide-react"
+import { useState } from "react"
+import { useAuth } from "@/context/AuthContext"
+import { Link, useNavigate, useLocation } from "react-router-dom"
+import { toast } from "@/components/ui/sonner"
+import { UserCredentials } from "@/types" 
 
 const loginSchema = z.object({
-  usernameOrEmail: z.string().min(3, { message: "Username or Email is required" }),
-  password: z.string().min(3, { message: "Password is required" }),
-});
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(1, { message: "Password is required" }),
+})
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type LoginFormValues = z.infer<typeof loginSchema>
 
 const Login = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const [showPassword, setShowPassword] = useState(false)
+  const { login } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+  
+  // Get the page they tried to visit before being redirected to login
+  const from = location.state?.from?.pathname || "/"
+  
+  console.log("Login page: will redirect to", from, "after successful login");
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      usernameOrEmail: "",
-      password: "",
-    },
-  });
+    defaultValues: { email: "", password: "" },
+  })
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
-      await login({
-        usernameOrEmail: values.usernameOrEmail,
-        password: values.password,
-      });
-      navigate("/");
+      console.log("Attempting login with:", values.email);
+      await login(values as UserCredentials)
+      console.log("Login successful, redirecting to:", from);
+      navigate(from, { replace: true })
     } catch (error) {
-      // Error handling is done in the auth context
+      console.error("Login form error:", error);
+      // AuthContext already handles error toasts
     }
-  };
+  }
 
   const handleDemo = async () => {
     try {
-      await login({ usernameOrEmail: "ylands", password: "password" });
-      toast({
-        title: "Demo login successful",
+      console.log("Attempting demo login with gamer@example.com");
+      await login({ 
+        email: "gamer@example.com", 
+        password: "password",
+      })
+      toast.success("Demo login successful", {
         description: "Logged in as a demo user",
-      });
+      })
+      console.log("Demo login successful, redirecting to:", from);
+      navigate(from, { replace: true })
     } catch (error) {
-      // Error handling is done in the auth context
+      console.error("Demo login failed:", error);
+      // already toasts
     }
-  };
+  }
 
   const handleYlandsDemo = async () => {
     try {
-      await login({ usernameOrEmail: "demo@example.com", password: "password" });
-      toast({
-        title: "Ylands demo login successful",
+      console.log("Attempting demo login with ylands@example.com");
+      await login({ 
+        email: "ylands@example.com", 
+        password: "password",
+      })
+      toast.success("Ylands demo login successful", {
         description: "Logged in as a Ylands demo user",
-      });
+      })
+      console.log("Ylands demo login successful, redirecting to:", from);
+      navigate(from, { replace: true })
     } catch (error) {
-      // Error handling is done in the auth context
+      console.error("Ylands demo login failed:", error);
+      // already toasts
     }
-  };
+  }
+
+  const handleAdminDemo = async () => {
+    try {
+      console.log("Attempting admin demo login with admin@example.com");
+      await login({ 
+        email: "admin@example.com", 
+        password: "password",
+      })
+      toast.success("Admin login successful", {
+        description: "Logged in as an admin user",
+      })
+      console.log("Admin login successful, redirecting to:", from);
+      navigate(from, { replace: true })
+    } catch (error) {
+      console.error("Admin login failed:", error);
+      // already toasts
+    }
+  }
 
   return (
     <div className="container max-w-md py-16">
@@ -74,14 +115,14 @@ const Login = () => {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
+            <FormField
               control={form.control}
-              name="usernameOrEmail"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username or Email</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your username or email" {...field} />
+                    <Input placeholder="Enter your email" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -103,14 +144,12 @@ const Login = () => {
                       />
                       <Button
                         type="button"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-0 top-0 h-full px-3 py-1 text-muted-foreground hover:text-foreground"
                       >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
                     </div>
                   </FormControl>
@@ -126,22 +165,34 @@ const Login = () => {
         </Form>
 
         <div className="mt-6 pt-6 border-t text-center space-y-3">
-          <Button onClick={handleDemo} className="w-full">
+          <p className="text-xs text-muted-foreground mb-2">Quick Login Options:</p>
+          <Button variant="outline" onClick={handleDemo} className="w-full">
             Demo Login (Gamer)
           </Button>
-          <Button onClick={handleYlandsDemo} className="w-full bg-blue-500 hover:bg-blue-600 text-white hover:text-white">
+          <Button
+            variant="outline"
+            onClick={handleYlandsDemo}
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+          >
             Ylands Demo Login
           </Button>
-          <p className="text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
+          <Button
+            variant="outline"
+            onClick={handleAdminDemo}
+            className="w-full bg-green-500 hover:bg-green-600 text-white"
+          >
+            Admin Demo Login
+          </Button>
+          <p className="text-sm text-muted-foreground mt-4">
+            Don't have an account?{" "}
             <Link to="/register" className="text-primary hover:underline">
-              Sign up
+              Register
             </Link>
           </p>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Login;
+export default Login

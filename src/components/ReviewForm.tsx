@@ -1,110 +1,81 @@
+// src/components/ReviewForm.tsx
 import { useState } from "react";
-import { Review } from "@/types";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { API } from "@/services/api";
-import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
-
-const reviewSchema = z.object({
-  rating: z.number().min(1).max(5),
-  content: z.string().min(10, "Review must be at least 10 characters"),
-});
-
-type ReviewFormValues = z.infer<typeof reviewSchema>;
+import { StarIcon } from "lucide-react";
 
 interface ReviewFormProps {
-  gameId: string;
-  onReviewAdded: (review: Review) => void;
+  isSubmitting: boolean;
+  onSubmitReview: (rating: number, comment: string) => Promise<any>;
 }
 
-export function ReviewForm({ gameId, onReviewAdded }: ReviewFormProps) {
-  const { user } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export default function ReviewForm({
+  isSubmitting,
+  onSubmitReview,
+}: ReviewFormProps) {
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [error, setError] = useState("");
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-    watch,
-  } = useForm<ReviewFormValues>({
-    resolver: zodResolver(reviewSchema),
-    defaultValues: {
-      rating: 5,
-      content: "",
-    },
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
 
-  const onSubmit = async (data: ReviewFormValues) => {
-    if (!user) return;
-  
+    if (rating === 0) {
+      setError("Please select a rating");
+      return;
+    }
+
     try {
-      setIsSubmitting(true);
-      const newReview = await API.addReview({
-        gameId: gameId,
-        rating: data.rating,
-        comment: data.content, // Make sure this matches the backend's 'comment' field
-      });
-  
-      onReviewAdded(newReview);
-      reset();
-      toast.success("Review added successfully");
-    } catch (error) {
-      console.error("Failed to add review:", error);
-      toast.error("Failed to add review");
-    } finally {
-      setIsSubmitting(false);
+      await onSubmitReview(rating, comment);
+      setRating(0);
+      setComment("");
+    } catch (err: any) {
+      setError(err.message || "Failed to submit review");
     }
   };
 
-  if (!user) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-muted-foreground">
-          Please sign in to leave a review
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium mb-2">Rating</label>
-        <div className="flex gap-2">
-          {Array.from({ length: 5 }, (_, i) => i + 1).map((star) => (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <div className="text-sm font-medium">Your Rating</div>
+        <div className="flex items-center gap-1">
+          {[1, 2, 3, 4, 5].map((value) => (
             <button
-              key={star}
+              key={value}
               type="button"
-              onClick={() => reset({ rating: star })}
-              className={`text-2xl ${
-                star <= watch("rating") ? "text-yellow-500" : "text-muted"
-              }`}
+              onClick={() => setRating(value)}
+              onMouseEnter={() => setHoverRating(value)}
+              onMouseLeave={() => setHoverRating(0)}
+              className="p-1 focus:outline-none focus:ring-0"
             >
-              ★
+              <StarIcon
+                className={`h-8 w-8 ${
+                  value <= (hoverRating || rating)
+                    ? "fill-yellow-400 text-yellow-400"
+                    : "fill-muted/20 text-muted"
+                } transition-colors`}
+              />
             </button>
           ))}
         </div>
-        {errors.rating && (
-          <p className="text-sm text-red-500 mt-1">{errors.rating.message}</p>
-        )}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-2">Review</label>
+      <div className="space-y-2">
+        <label htmlFor="comment" className="text-sm font-medium">
+          Your Review (optional)
+        </label>
         <Textarea
-          {...register("content")}
-          className="min-h-[100px]"
-          placeholder="Write your review..."
+          id="comment"
+          placeholder="Share your thoughts about this game..."
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          rows={5}
         />
-        {errors.content && (
-          <p className="text-sm text-red-500 mt-1">{errors.content.message}</p>
-        )}
       </div>
+
+      {error && <div className="text-red-500 text-sm">{error}</div>}
 
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Submitting..." : "Submit Review"}

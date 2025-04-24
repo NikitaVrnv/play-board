@@ -1,345 +1,218 @@
-# Games Review Board
+# Play‑Board Review Space
 
-A comprehensive web application for browsing, reviewing, and managing games. Built with modern web technologies and a robust database system.
+A full‐stack video‑game review platform—**frontend** in React + Vite + TypeScript, **backend** in Node/Bun, with database migrations, Docker, Nginx reverse‑proxy, and more.
+
+---
+
+## Table of Contents
+
+1. [Monorepo Layout](#monorepo‑layout)  
+2. [Features](#features)  
+3. [Tech Stack](#tech‑stack)  
+4. [Prerequisites](#prerequisites)  
+5. [Getting Started](#getting‑started)  
+   - [Running Frontend Locally](#running‑frontend‑locally)  
+   - [Running Backend Locally](#running‑backend‑locally)  
+   - [Running Both via Docker Compose](#running‑both‑via‑docker‑compose)  
+6. [Available Scripts](#available‑scripts)  
+7. [Environment Variables](#environment‑variables)  
+8. [Project Structure](#project‑structure)  
+9. [Deployment](#deployment)  
+   - [Static Build & Serve](#static‑build‑serve)  
+   - [Docker](#docker)  
+   - [Vercel / Netlify (Frontend Only)](#vercel‑netlify)  
+10. [Contributing](#contributing)  
+11. [License](#license)  
+
+## Monorepo Layout
+
+```bash
+📁 play‑board-review-space-main/
+├── backend/                   # 🚀 Node/Bun API service
+│   ├── src/                   # • controllers, routes, models, index.ts
+│   ├── migrations/            # • DB migration scripts
+│   ├── package.json           # • backend dependencies & scripts
+│   ├── bun.lockb              # • bun lockfile (if using Bun)
+│   ├── .env.example           # • example env vars for backend
+│   └── README.md              # • backend‑specific docs
+├── migrations/                 # 🔄 shared DB migration folder
+├── nginx.conf                  # 🌐 Nginx reverse proxy config
+├── docker-compose.yml          # 🐳 service orchestration (db, api, web, nginx)
+├── index.html                  # 📄 static fallback (for SPA + nginx)
+├── src/                        # 🎨 frontend Vite app (React + TS)
+├── public/                     # 📁 frontend static assets (videos, svg)
+├── scripts/                    # 🤖 misc scripts (e.g. scrape.js)
+├── postcss.config.js           # 🛠 PostCSS
+├── tailwind.config.ts          # 🎨 Tailwind config
+├── vite.config.ts              # ⚡ Vite config
+├── tsconfig*.json              # 🔧 TypeScript configs
+├── package.json                # 📦 root lock & scripts
+├── package-lock.json / bun.lockb
+├── .gitignore
+├── Dockerfile                  # 🐳 multi‑stage Dockerfile
+└── README.md
+```
 
 ## Features
-
-- **Game Management**
-  - Detailed game information including metadata, platforms, and requirements
-  - Support for multiple platforms and pricing
-  - Achievement tracking
-  - Media management (screenshots, videos)
-  - Age ratings and content descriptors
-
-- **User Features**
-  - User profiles with enhanced information
-  - Game library management
-  - Playtime tracking
-  - Wishlist functionality
-  - Favorite games marking
-
-- **Review System**
-  - Detailed game reviews
-  - Helpful/Not helpful voting
-  - Verified owner badges
-  - Playtime tracking
-  - Featured reviews
-
-- **Search and Discovery**
-  - Advanced search with full-text capabilities
-  - Genre-based browsing
-  - Trending games
-  - Similar games recommendations
-  - Developer and publisher statistics
+- **Games Collection**  
+  - Browse, filter by genre, full‑text search, sort by newest/oldest/rating/reviews  
+- **Game Detail Pages**  
+  - Cover image, metadata, description, composer, publisher, company profile  
+- **User Reviews & Ratings**  
+  - Read existing reviews, submit new ones, live‑update average rating  
+- **Auth** (mocked)  
+  - Login / Register, protected “Add Game” page  
+- **Dark / Light Mode**  
+- **Mobile‑First & Responsive**  
+- **Bohemia Interactive Showcase** at `/bohemia-games`  
+- **Containerized**  
+  - Docker Compose for API, frontend, Postgres, Nginx  
 
 ## Tech Stack
-
-### Frontend
-- React 18 with TypeScript
-- Vite for build tooling
-- Tailwind CSS for styling
-- Apollo Client for GraphQL
-- React Query for data fetching
-- React Router for navigation
-- Jest & React Testing Library for testing
-
-### Backend
-- Node.js with Express
-- Apollo Server for GraphQL
-- MySQL 8.0+ database
-- Sequelize ORM
-- JWT authentication
-- Multer for file uploads
-- Winston for logging
-
-### Infrastructure
-- Docker for containerization
-- Nginx for reverse proxy
-- PM2 for process management
-- GitHub Actions for CI/CD
-- AWS S3 for media storage
-- Cloudflare for CDN
+- **Frontend:** Vite • React • TypeScript • Tailwind CSS • shadcn/ui  
+- **Backend:** Node.js (or Bun) • Express / Fastify • TypeScript  
+- **DB & Migrations:** PostgreSQL • [Knex / TypeORM / Prisma] migrations  
+- **Routing:** React Router v6  
+- **Icons:** Lucide React  
+- **Auth:** JWT (mocked in-memory)  
+- **Containerization:** Docker & Docker Compose  
+- **Reverse Proxy:** Nginx  
 
 ## Prerequisites
+- **Node.js** v16+ & **npm** (or **yarn**)  
+- **Bun** (optional, if you’re using Bun for backend)  
+- **Docker** & **docker‑compose** (for the “one‑command” setup)  
+- **PostgreSQL** (if running backend without Docker)  
 
-- Node.js 18.x or higher
-- MySQL 8.0 or higher
-- Docker and Docker Compose (optional)
-- Git
-- npm or yarn
-- AWS CLI (for S3 configuration)
-- Cloudflare account (for CDN)
+## Getting Started
+### Running Frontend Locally
+```bash
+# from repo root
+cd src
+npm install
+npm run dev
+# → http://localhost:8080
+```
+### Running Backend Locally
+```bash
+# from repo root
+cd backend
+npm install           # or bun install
+cp .env.example .env  # configure DB_URL, PORT, JWT_SECRET, etc.
+npm run migrate       # run migrations (e.g. via Knex/TypeORM/Prisma)
+npm run dev           # start backend on http://localhost:4000 (default)
+```
+By default the frontend will call `http://localhost:4000/api`—you can override that with `VITE_API_BASE` in the FE `.env`.
 
-## Development Setup
+### Running Both via Docker Compose
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/games-review-board.git
-   cd games-review-board
-   ```
+```bash
+# from repo root
+docker-compose up --build
+```
+This will spin up:
 
-2. Install dependencies:
-   ```bash
-   # Install root dependencies
-   npm install
+-   **postgres** (exposed on 5432)
+    
+-   **backend** (on port 4000)
+    
+-   **frontend** (on port 8080)
+    
+-   **nginx** (reverse‑proxy on port 80 → frontend + API)
 
-   # Install frontend dependencies
-   cd frontend
-   npm install
+## Available Scripts
 
-   # Install backend dependencies
-   cd ../backend
-   npm install
-   ```
+-   `npm run dev` — start Vite dev server
+    
+-   `npm run build` — bundle for production
+    
+-   `npm run preview` — serve the `dist/` locally
+    
+-   `npm run lint` / `npm run format`
 
-3. Set up environment variables:
-   ```bash
-   # Copy example environment files
-   cp .env.example .env
-   cd frontend && cp .env.example .env
-   cd ../backend && cp .env.example .env
-   ```
+-   `npm run dev` — start server with hot‑reload
+    
+-   `npm run migrate` — run DB migrations
+    
+-   `npm run seed` — seed initial data
+    
+-   `npm run start` — production start
 
-4. Configure your environment variables in the `.env` files.
+## Environment Variables
 
-5. Set up the database:
-   ```bash
-   mysql -u root -p < migrations/schema.sql
-   mysql -u root -p < migrations/views.sql
-   mysql -u root -p < migrations/triggers.sql
-   mysql -u root -p < migrations/seed.sql
-   ```
+`.env` (frontend)
 
-6. Start the development servers:
-   ```bash
-   # Terminal 1 - Backend
-   cd backend
-   npm run dev
+`VITE_API_BASE`, `VITE_PORT`, etc.
 
-   # Terminal 2 - Frontend
-   cd frontend
-   npm run dev
-   ```
+`backend/.env`
 
-## Production Deployment
+`PORT`, `DATABASE_URL`, `JWT_SECRET`, etc.
 
-### Docker Deployment
+Be sure to copy each `.env.example` and fill in your values before running.
 
-1. Build the Docker images:
-   ```bash
-   docker-compose build
-   ```
+## Project Structure
+```
+.
+├── backend/              # API service
+│   ├── migrations/       # DB migrations
+│   ├── src/              # server code (routes, controllers)
+│   ├── .env.example      # env var template
+│   ├── package.json      # backend scripts & deps
+│   └── bun.lockb         # (if using Bun)
+├── migrations/           # (optional) shared migrations
+├── docker-compose.yml    # orchestration for all services
+├── nginx.conf            # reverse‑proxy configuration
+├── src/                  # frontend Vite + React + TS
+│   ├── pages/            # React Router views
+│   ├── components/       # UI & layout
+│   ├── services/api.ts   # in‑memory mock API
+│   ├── types/            # TS interfaces
+│   └── index.css         # Tailwind imports & custom styles
+├── public/               # static assets (videos, icons)
+├── scripts/              # misc scripts (e.g. scraper)
+├── .gitignore
+├── Dockerfile            # multi‑stage for production
+├── README.md             # this doc
+└── package.json          # root (can hold shared scripts)
 
-2. Start the containers:
-   ```bash
-   docker-compose up -d
-   ```
+```
+## Deployment
 
-3. Run database migrations:
-   ```bash
-   docker-compose exec backend npm run db:migrate
-   ```
+### Static Build & Serve
+```bash
+# build frontend only
+cd src
+npm run build
+# serve `dist/` with any static server
+npx serve -s dist
+```
+### Docker
+```bash
+docker-compose -f docker-compose.yml up -d --build
+# browse to http://localhost
+```
 
-### Manual Deployment
+### Vercel / Netlify (frontend)
 
-1. Build the frontend:
-   ```bash
-   cd frontend
-   npm run build
-   ```
+-   Set build command → `npm run build`
+    
+-   Set publish dir → `dist`
+    
+-   Add `VITE_API_BASE` to environment
+    
 
-2. Build the backend:
-   ```bash
-   cd backend
-   npm run build
-   ```
-
-3. Set up Nginx:
-   ```nginx
-   server {
-       listen 80;
-       server_name yourdomain.com;
-
-       # Frontend
-       location / {
-           root /path/to/frontend/dist;
-           try_files $uri $uri/ /index.html;
-       }
-
-       # Backend API
-       location /api {
-           proxy_pass http://localhost:3000;
-           proxy_http_version 1.1;
-           proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection 'upgrade';
-           proxy_set_header Host $host;
-           proxy_cache_bypass $http_upgrade;
-       }
-
-       # GraphQL
-       location /graphql {
-           proxy_pass http://localhost:3000;
-           proxy_http_version 1.1;
-           proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection 'upgrade';
-           proxy_set_header Host $host;
-           proxy_cache_bypass $http_upgrade;
-       }
-   }
-   ```
-
-4. Start the backend with PM2:
-   ```bash
-   pm2 start ecosystem.config.js
-   ```
-
-### Database Setup
-
-1. Create a production database:
-   ```bash
-   mysql -u root -p
-   CREATE DATABASE games_review_board_prod;
-   ```
-
-2. Import the schema and data:
-   ```bash
-   mysql -u root -p games_review_board_prod < migrations/schema.sql
-   mysql -u root -p games_review_board_prod < migrations/views.sql
-   mysql -u root -p games_review_board_prod < migrations/triggers.sql
-   ```
-
-3. Set up database backups:
-   ```bash
-   # Add to crontab
-   0 0 * * * /path/to/scripts/db-backup.sh
-   ```
-
-### SSL Configuration
-
-1. Install Certbot:
-   ```bash
-   sudo apt-get install certbot python3-certbot-nginx
-   ```
-
-2. Obtain SSL certificate:
-   ```bash
-   sudo certbot --nginx -d yourdomain.com
-   ```
-
-3. Configure automatic renewal:
-   ```bash
-   sudo certbot renew --dry-run
-   ```
-
-## Monitoring and Maintenance
-
-### Logging
-- Application logs: `/var/log/games-review-board/`
-- Nginx logs: `/var/log/nginx/`
-- Database logs: `/var/log/mysql/`
-
-### Backup Strategy
-- Daily database backups
-- Weekly full system backups
-- Monthly archive backups
-
-### Performance Monitoring
-- PM2 monitoring dashboard
-- MySQL performance monitoring
-- Nginx status monitoring
-
-## Security Considerations
-
-1. **Environment Variables**
-   - Never commit `.env` files
-   - Use strong passwords and secrets
-   - Rotate secrets regularly
-
-2. **Database Security**
-   - Use strong passwords
-   - Limit database user permissions
-   - Enable SSL connections
-   - Regular security audits
-
-3. **Application Security**
-   - Enable CORS properly
-   - Implement rate limiting
-   - Use HTTPS everywhere
-   - Regular security updates
-
-4. **Infrastructure Security**
-   - Regular system updates
-   - Firewall configuration
-   - DDoS protection
-   - Regular security scans
-
-## Scaling Considerations
-
-### Vertical Scaling
-- Increase server resources
-- Optimize database queries
-- Use caching strategies
-
-### Horizontal Scaling
-- Load balancing with Nginx
-- Database replication
-- Session management
-- File storage distribution
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Database Connection Issues**
-   ```bash
-   # Check MySQL status
-   sudo systemctl status mysql
-
-   # Check connection logs
-   tail -f /var/log/mysql/error.log
-   ```
-
-2. **Application Crashes**
-   ```bash
-   # Check PM2 logs
-   pm2 logs
-
-   # Check application logs
-   tail -f /var/log/games-review-board/app.log
-   ```
-
-3. **Performance Issues**
-   ```bash
-   # Check system resources
-   htop
-
-   # Check MySQL performance
-   mysqladmin status
-   ```
+_Backend_ can go on Heroku/Render etc., point `VITE_API_BASE` at its URL.
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1.  Fork & clone
+    
+2.  `git checkout -b feat/...`
+    
+3.  `npm install && npm run dev`
+    
+4.  Push & open a PR
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- [React](https://reactjs.org/)
-- [Vite](https://vitejs.dev/)
-- [Express](https://expressjs.com/)
-- [Apollo Server](https://www.apollographql.com/docs/apollo-server/)
-- [MySQL](https://www.mysql.com/)
-- [Sequelize](https://sequelize.org/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Docker](https://www.docker.com/)
-- [Nginx](https://www.nginx.com/)
-- [PM2](https://pm2.keymetrics.io/)
-- [AWS S3](https://aws.amazon.com/s3/)
-- [Cloudflare](https://www.cloudflare.com/)
+This project is licensed under the MIT License.

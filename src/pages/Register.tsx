@@ -1,4 +1,4 @@
-import { useState } from "react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -6,8 +6,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
+import { UserCredentials } from "@/types";
+
 const registerSchema = z.object({
   username: z
     .string()
@@ -37,7 +40,7 @@ const Register = () => {
 
   const onSubmit = async (values: RegisterFormValues) => {
     try {
-      await register(values);
+      await register(values as UserCredentials);
       navigate("/");
     } catch (error) {
       // Error handling is done in the auth context
@@ -95,6 +98,8 @@ const Register = () => {
                       />
                       <Button
                         type="button"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-0 top-0 h-full px-3 py-1 text-muted-foreground hover:text-foreground"
                       >

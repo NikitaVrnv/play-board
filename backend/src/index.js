@@ -6,7 +6,7 @@ const authRoutes = require('./routes/auth');
 const gamesRoutes = require('./routes/games');
 const reviewsRoutes = require('./routes/reviews');
 const companiesRoutes = require('./routes/companies');
-
+const adminRoutes = require('./routes/adminRoutes');
 // Load environment variables
 dotenv.config();
 
@@ -14,6 +14,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
+app.use(cors());
 app.use(express.json());
 
 // Routes
@@ -21,7 +22,7 @@ app.use('/auth', authRoutes);
 app.use('/games', gamesRoutes);
 app.use('/reviews', reviewsRoutes);
 app.use('/companies', companiesRoutes);
-
+app.use("/api/admin", adminRoutes);
 // Base route
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the Games Review Board API' });

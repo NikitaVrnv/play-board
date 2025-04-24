@@ -267,6 +267,8 @@ const SidebarTrigger = React.forwardRef<
     <Button
       ref={ref}
       data-sidebar="trigger"
+      variant="ghost"
+      size="icon"
       className={cn("h-7 w-7", className)}
       onClick={(event) => {
         onClick?.(event)
@@ -731,42 +733,29 @@ const SidebarMenuSubButton = React.forwardRef<
 })
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
 
-const SidebarItem = React.forwardRef<
-  HTMLDivElement,
-  React.ComponentProps<"div">
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    data-sidebar="item"
-    className={cn("px-2 py-1.5 text-sm text-muted-foreground", className)}
-    {...props}
-  />
-))
-SidebarItem.displayName = "SidebarItem"
-
 export {
   Sidebar,
-  SidebarProvider,
-  SidebarHeader,
   SidebarContent,
   SidebarFooter,
-  SidebarItem,
-  SidebarSeparator,
-  SidebarTrigger,
-  SidebarInset,
-  SidebarRail,
-  SidebarInput,
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarGroupAction,
   SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInput,
+  SidebarInset,
   SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   SidebarMenuAction,
   SidebarMenuBadge,
+  SidebarMenuButton,
+  SidebarMenuItem,
   SidebarMenuSkeleton,
   SidebarMenuSub,
-  SidebarMenuSubItem,
   SidebarMenuSubButton,
+  SidebarMenuSubItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarSeparator,
+  SidebarTrigger,
+  useSidebar,
 }

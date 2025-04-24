@@ -1,24 +1,20 @@
+// src/components/game-details/GameHeader.tsx
 import { Game } from "@/types";
+import React from "react";
 
-interface GameHeaderProps {
+export interface GameHeaderProps {
   game: Game;
 }
 
-export function GameHeader({ game }: GameHeaderProps) {
+const GameHeader: React.FC<GameHeaderProps> = ({ game }) => {
   return (
-    <div className="mb-6">
-      <h1 className="text-4xl font-bold mb-2">{game.title}</h1>
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <span>{game.developer}</span>
-        <span>•</span>
-        <span>{game.genres[0]}</span>
-        {game.releaseDate && (
-          <>
-            <span>•</span>
-            <span>Released: {new Date(game.releaseDate).toLocaleDateString()}</span>
-          </>
-        )}
-      </div>
+    <div className="mb-8">
+      <h1 className="text-4xl font-bold py-4">{game.title}</h1>
+      <p className="text-sm text-muted-foreground">
+        Released on {new Date(game.releaseDate).toLocaleDateString()}
+      </p>
     </div>
   );
-}
+};
+
+export default GameHeader;

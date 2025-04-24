@@ -1,20 +1,32 @@
-import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
+// src/components/ProtectedRoute.tsx
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
+  requireAdmin?: boolean;
 }
 
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { user } = useAuth();
+export const ProtectedRoute = ({ requireAdmin = false }: ProtectedRouteProps) => {
+  const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
-  if (!user) {
-    // Redirect to login but save the attempted url
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-4 border-primary border-b-transparent" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  return <>{children}</>;
+  if (requireAdmin && user?.role !== "admin") {
+    return <Navigate to="/" replace />;
+  }
+
+  return <Outlet />;
 };
 
-export default ProtectedRoute; 
+export default ProtectedRoute;

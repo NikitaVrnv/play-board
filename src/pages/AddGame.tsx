@@ -1,6 +1,7 @@
-import { useAuth } from "@/hooks/useAuth";
+
+import { useAuth } from "@/context/AuthContext";
 import { Navigate } from "react-router-dom";
-import { AddGameForm } from "@/components/AddGameForm";
+import AddGameForm from "@/components/AddGameForm";
 
 const AddGame = () => {
   const { user } = useAuth();
@@ -17,7 +18,7 @@ const AddGame = () => {
       </p>
       
       <div className="max-w-3xl">
-        <AddGameForm onGameAdded={() => {/* логика после добавления */}} />
+        <AddGameForm />
       </div>
     </div>
   );

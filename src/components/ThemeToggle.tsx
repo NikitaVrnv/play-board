@@ -14,11 +14,13 @@ export function ThemeToggle() {
   }, []);
   
   if (!mounted) {
-    return <Button className="opacity-0"></Button>;
+    return <Button variant="ghost" size="icon" className="opacity-0"></Button>;
   }
 
   return (
     <Button
+      variant="ghost"
+      size="icon"
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
       className="rounded-full w-9 h-9 transition-all duration-300 hover:bg-primary/10"
     >

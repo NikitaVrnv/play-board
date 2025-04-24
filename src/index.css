@@ -1,102 +1,117 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Light mode colors */
+    /* Light mode colors (unchanged) */
     --background: 210 40% 98%;
     --foreground: 222 47% 11%;
-
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-
-    /* Primary - Ylands blue */
-    --primary: 201 88% 55%; /* rgb(48 160 235) */
+    --primary: 342 66% 55%;
     --primary-foreground: 210 40% 98%;
-
-    /* Secondary - Pink/Magenta */
-    --secondary: 342 66% 55%; /* rgb(209 71 106) */
+    --secondary: 342 66% 55%;     /* Pink/Magenta */
     --secondary-foreground: 210 40% 98%;
-
     --muted: 210 40% 93%;
     --muted-foreground: 215 16% 47%;
-
-    /* Ylands accent blue */
-    --accent: 201 88% 65%;
-    --accent-foreground: 222 47% 11%;
-
+    --accent: 342 66% 55%;
+    --accent-foreground: 342 66% 55%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 201 88% 55%;
-
+    --ring: 342 66% 55%;
     --radius: 0.5rem;
 
+    /* sidebar, etc… */
     --sidebar-background: 214 32% 96%;
     --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 201 88% 55%;
+    --sidebar-primary: 342 66% 55%;
     --sidebar-primary-foreground: 210 40% 98%;
     --sidebar-accent: 346 77% 49%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 201 88% 55%;
+    --sidebar-ring: 342 66% 55%;
   }
 
   .dark {
     /* Dark mode colors */
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
-
     --card: 222 47% 14%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222 47% 14%;
     --popover-foreground: 210 40% 98%;
 
-    /* Primary - Ylands blue */
-    --primary: 201 88% 55%; /* rgb(48 160 235) */
+    /* **New primary**: a warm gold, with a hover variant */
+    --primary: 43.6 100% 69.8%;
+    --primary-hover: 43.6 100% 60%;
     --primary-foreground: 222 47% 11%;
 
-    /* Secondary - Pink/Magenta */
-    --secondary: 342 66% 55%; /* rgb(209 71 106) */
+    /* Secondary stays the same */
+    --secondary: 342 66% 55%;
     --secondary-foreground: 210 40% 98%;
 
     --muted: 223 47% 20%;
     --muted-foreground: 215 20% 75%;
-
-    /* Ylands accent blue */
     --accent: 201 88% 65%;
     --accent-foreground: 222 47% 11%;
-
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 223 47% 20%;
     --input: 223 47% 20%;
-    --ring: 201 88% 55%;
+    --ring: 342 66% 55%;
 
     --sidebar-background: 222 47% 8%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 201 88% 55%;
+    --sidebar-primary: 342 66% 55%;
     --sidebar-primary-foreground: 222 47% 11%;
     --sidebar-accent: 346 77% 49%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 223 47% 20%;
-    --sidebar-ring: 201 88% 55%;
+    --sidebar-ring: 342 66% 55%;
+  }
+
+  /* Override **all** Tailwind “blue” utilities in dark to use –secondary */
+  .dark input:focus,
+  .dark textarea:focus,
+  .dark .ring-blue-500 {     --tw-ring-color: hsl(var(--secondary)); }
+  .dark .hover\:ring-blue-600:hover { --tw-ring-color: hsl(var(--secondary) / 0.9); }
+
+  .dark .border-blue-500 { border-color: hsl(var(--secondary)); }
+  .dark .hover\:border-blue-600:hover { border-color: hsl(var(--secondary) / 0.9); }
+
+  .dark .text-blue-500 { color: hsl(var(--secondary)); }
+  .dark .hover\:text-blue-600:hover { color: hsl(var(--secondary) / 0.9); }
+
+  .dark .bg-blue-500 { background-color: hsl(var(--secondary)); }
+  .dark .hover\:bg-blue-600:hover { background-color: hsl(var(--secondary) / 0.9); }
+
+  /* And override any custom utilities that used blue: */
+  .dark .ylands-gradient {
+    background: linear-gradient(
+      to right,
+      hsl(var(--secondary)),
+      hsl(var(--secondary-hover, var(--secondary)))
+    );
+  }
+  .dark .ylands-button {
+    background-color: hsl(var(--secondary));
+  }
+  .dark .ylands-button:hover {
+    background-color: hsl(var(--secondary) / 0.9);
+  }
+  .dark .edu-highlight {
+    border-color: hsl(var(--secondary));
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+  * { @apply border-border; }
 
   body {
     @apply bg-background text-foreground;
@@ -108,11 +123,9 @@
     width: 8px;
     height: 8px;
   }
-
   ::-webkit-scrollbar-track {
     @apply bg-muted/30 rounded-full;
   }
-
   ::-webkit-scrollbar-thumb {
     @apply bg-accent/70 rounded-full hover:bg-accent/90 transition-colors;
   }
@@ -120,46 +133,25 @@
 
 @layer utilities {
   .game-card {
-    @apply bg-card rounded-lg overflow-hidden border border-muted/50 shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-1;
-  }
+    @apply bg-card rounded-lg overflow-hidden border border-muted/50 shadow-md
+           transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-1;
+        @apply
+          hover:shadow-lg
+          hover:shadow-black/20
+          hover:-translate-y-1;
+    }
+  .rating-star { @apply w-5 h-5 text-yellow-400; }
+  .rating-inactive { @apply text-muted; }
 
-  .rating-star {
-    @apply w-5 h-5 text-yellow-400;
-  }
-
-  .rating-inactive {
-    @apply text-muted;
-  }
-  
-  /* Ylands specific utilities */
-  .ylands-gradient {
-    @apply bg-gradient-to-r from-blue-500 to-cyan-400;
-  }
-  
-  .ylands-button {
-    @apply bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors duration-200;
-  }
-  
-  .edu-highlight {
-    @apply border-l-4 border-blue-500 pl-4 py-2;
-  }
+  /* Your original Blue-based utilities (light mode) */
+  .ylands-gradient { @apply bg-gradient-to-r from-blue-500 to-cyan-400; }
+  .ylands-button   { @apply bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors duration-200; }
+  .edu-highlight   { @apply border-l-4 border-blue-500 pl-4 py-2; }
 
   /* Star animations */
-  @keyframes star-pulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.2); opacity: 0.8; }
-  }
-  
-  @keyframes star-fill {
-    0% { fill-opacity: 0; }
-    100% { fill-opacity: 1; }
-  }
-  
-  .star-animate-pulse {
-    animation: star-pulse 0.5s ease-in-out;
-  }
-  
-  .star-animate-fill {
-    animation: star-fill 0.3s ease-out forwards;
-  }
+  @keyframes star-pulse { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.2);opacity:0.8;} }
+  @keyframes star-fill  { 0%{fill-opacity:0;} 100%{fill-opacity:1;} }
+
+  .star-animate-pulse { animation: star-pulse 0.5s ease-in-out; }
+  .star-animate-fill  { animation: star-fill  0.3s ease-out forwards; }
 }

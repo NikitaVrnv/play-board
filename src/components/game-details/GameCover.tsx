@@ -1,3 +1,4 @@
+
 interface GameCoverProps {
   coverImage: string;
   title: string;
@@ -5,7 +6,7 @@ interface GameCoverProps {
 
 const GameCover = ({ coverImage, title }: GameCoverProps) => {
   return (
-    <div className="relative aspect-[16/9] rounded-lg overflow-hidden mb-6">
+    <div className="relative aspect-video w-full overflow-hidden rounded-lg mb-6 bg-muted">
       <img
         src={coverImage}
         alt={title}

@@ -1,325 +1,222 @@
-import { Game, Review, User, RegisterCredentials, LoginCredentials, SettingsFormValues, Genre, SortOption } from "@/types";
-import { mockGenres, mockGames } from "@/mocks/mockData";
-import { snakeToCamel } from '@/utils/caseConversion';
+// src/services/api.ts
+import { Game, Review, User, UserCredentials } from "@/types";
 
-const raw = await fetch(...);
-const json = await raw.json();
-const game = snakeToCamel(json) as Game;
-// Use a consistent API URL with fallback
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8888/api';
+// API utility functions
+const BASE_URL = import.meta.env.VITE_API_BASE || "http://localhost:4000/api";
 
-// Cache for frequently used data to prevent blinking
-const cache = {
-  games: null as Game[] | null,
-  genres: null as Genre[] | null,
-  gameDetails: new Map<string, Game>(),
-  gameReviews: new Map<string, Review[]>(),
-};
-
-// Helper for getting auth headers
-const getAuthHeader = (): HeadersInit => {
-  const token = localStorage.getItem("token") ?? "";
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
-// Helper for handling API responses
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
     try {
       const errorData = await response.json();
-      throw new Error(errorData.message || 'Request failed');
+      console.error("API error response:", errorData);
+      throw new Error(errorData.error || errorData.message || `API error: ${response.status}`);
     } catch (e) {
-      // If parsing the error response fails, throw a generic error
-      throw new Error(`Request failed with status ${response.status}`);
+      if (e instanceof Error) throw e;
+      throw new Error(`API error: ${response.status}`);
     }
   }
   return response.json();
 };
 
-// Helper for making fetch requests with consistent error handling
-const apiRequest = async (url: string, options: RequestInit = {}) => {
-  try {
-    const response = await fetch(url, options);
-    return handleResponse(response);
-  } catch (error) {
-    console.error(`API request failed for ${url}:`, error);
-    throw error;
+// Create headers with auth token when available
+const createHeaders = () => {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  
+  const token = localStorage.getItem("token");
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
-};
-
-// Type for game filtering parameters
-type GameParams = {
-  author?: string;
-  genre?: Genre;
-  sort?: SortOption;
-  search?: string;
+  
+  return headers;
 };
 
 export const API = {
-  // Authentication
-  login: async ({ usernameOrEmail, password }: LoginCredentials): Promise<User> => {
-    return apiRequest(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      mode: 'cors', // Optional in modern browsers but useful for clarity
-      body: JSON.stringify({ usernameOrEmail, password }),
-    });
-  },
-
-  register: async (credentials: RegisterCredentials): Promise<User> => {
-    return apiRequest(`${API_URL}/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      } as HeadersInit,
-      body: JSON.stringify(credentials),
-    });
-  },
-
-  // User
-  updateUser: async (data: {
-    username?: string;
-    email?: string;
-    currentPassword: string;
-    newPassword?: string
-  }): Promise<User> => {
-    return apiRequest(`${API_URL}/auth/update`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeader(),
-      } as HeadersInit,
-      body: JSON.stringify(data),
-    });
-  },
-
-  getUserGames: async (userId: string): Promise<Game[]> => {
-    return apiRequest(`${API_URL}/users/${userId}/games`, {
-      headers: getAuthHeader(),
-    });
-  },
-
-  getCurrentUser: async (): Promise<User> => {
-    return apiRequest(`${API_URL}/auth/me`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeader(),
-      },
-    });
-  },
-
-  getReviews: async (userId: string): Promise<Review[]> => {
-    return apiRequest(`${API_URL}/users/${userId}/reviews`, {
-      headers: getAuthHeader(),
-    });
-  },
-
-  // Games
-  getGames: async (params: GameParams = {}): Promise<Game[]> => {
-    // Use cached data if available to prevent blinking
-    if (cache.games && Object.keys(params).length === 0) {
-      return cache.games;
-    }
-
-    try {
-      const queryParams = new URLSearchParams();
-      if (params.author) queryParams.set('author', params.author);
-      if (params.genre) queryParams.set('genre', params.genre);
-      if (params.sort) queryParams.set('sort', params.sort);
-      if (params.search) queryParams.set('search', params.search);
-
-      const data = await apiRequest(`${API_URL}/games?${queryParams}`);
-      
-      // Cache the data if it's a basic fetch without params
-      if (Object.keys(params).length === 0) {
-        cache.games = data;
-      }
-      
-      return data;
-    } catch (error) {
-      console.warn('Using mock data for games');
-      
-      // Filter mock data based on params if needed
-      let filteredGames = [...mockGames];
-      if (params.genre) {
-        filteredGames = filteredGames.filter(game => 
-          game.genres?.includes(params.genre as string)
-        );
-      }
-      
-      // Cache the mock data
-      if (Object.keys(params).length === 0) {
-        cache.games = filteredGames;
-      }
-      
-      return filteredGames;
-    }
-  },
-
-  getGame: async (gameId: string): Promise<Game> => {
-    // Use cached data if available
-    if (cache.gameDetails.has(gameId)) {
-      const cachedGame = cache.gameDetails.get(gameId);
-      if (cachedGame) {
-        return cachedGame;
-      }
+  // Auth endpoints
+  login: async (credentials: UserCredentials) => {
+    console.log("API.login called with:", credentials);
+    
+    if (!credentials.email || !credentials.password) {
+      throw new Error("Email and password required");
     }
     
-    try {
-      const data = await apiRequest(`${API_URL}/games/${gameId}`, {
-        headers: getAuthHeader(),
-      });
-      
-      // Cache the data
-      cache.gameDetails.set(gameId, data);
-      
-      return data;
-    } catch (error) {
-      console.warn('Attempting to find game in mock data');
-      
-      // Try to find in cached games first
-      if (cache.games) {
-        const game = cache.games.find(g => g.id === gameId);
-        if (game) {
-          cache.gameDetails.set(gameId, game);
-          return game;
-        }
-      }
-      
-      // Try to find in mock data
-      const game = mockGames.find(g => g.id === gameId);
-      if (game) {
-        cache.gameDetails.set(gameId, game);
-        return game;
-      }
-      
-      throw error;
-    }
-  },
-
-  getGenres: async (): Promise<Genre[]> => {
-    // Use cached data if available
-    if (cache.genres) {
-      return cache.genres;
-    }
-    
-    try {
-      const data = await apiRequest(`${API_URL}/genres`);
-      
-      // Cache the data
-      cache.genres = data;
-      
-      return data;
-    } catch (error) {
-      console.warn('Using mock data for genres');
-      
-      // Cache the mock data
-      cache.genres = mockGenres;
-      
-      return mockGenres;
-    }
-  },
-
-  addGame: async (gameData: any): Promise<Game> => {
-    try {
-      // Convert camelCase to snake_case
-      const snakeCaseData = camelToSnake({
-        ...gameData,
-        slug: gameData.title?.toLowerCase().replace(/\s+/g, '-') || '',
-        short_description: gameData.description?.substring(0, 200) || ''
-      });
-      
-      const response = await fetch(`${API_URL}/games`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeader(),
-        } as HeadersInit,
-        body: JSON.stringify(snakeCaseData),
-      });
-      
-      const newGame = await handleResponse(response);
-      
-      // Invalidate the games cache when adding a new game
-      cache.games = null;
-      
-      return newGame;
-    } catch (error) {
-      console.error('Add game error:', error);
-      throw error;
-    }
-  },
-
-  getGameReviews: async (gameId: string): Promise<Review[]> => {
-    // Use cached data if available
-    if (cache.gameReviews.has(gameId)) {
-      const cachedReviews = cache.gameReviews.get(gameId);
-      if (cachedReviews) {
-        return cachedReviews;
-      }
-    }
-    
-    try {
-      const data = await apiRequest(`${API_URL}/reviews/game/${gameId}`);
-      
-      // Cache the data
-      cache.gameReviews.set(gameId, data);
-      
-      return data;
-    } catch (error) {
-      console.error('Get game reviews error:', error);
-      
-      // Cache empty reviews array for this game
-      cache.gameReviews.set(gameId, []);
-      
-      return [];
-    }
-  },
-
-  addReview: async (review: {
-    gameId: string;
-    rating: number;
-    comment: string; // Match the backend field name
-  }): Promise<Review> => {
-    const newReview = await apiRequest(`${API_URL}/reviews`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeader(),
-      } as HeadersInit,
-      body: JSON.stringify(review),
+    const response = await fetch(`${BASE_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: credentials.email,
+        password: credentials.password
+      }),
     });
     
-    // Invalidate the reviews cache for this game
-    cache.gameReviews.delete(review.gameId);
-    // Invalidate the game details cache as the rating may have changed
-    cache.gameDetails.delete(review.gameId);
+    const data = await handleResponse(response);
     
-    return newReview;
-  },
-
-  updateUserSettings: async (_values: SettingsFormValues) => {
-    try {
-      // If this is actually a simulation in development:
-      return new Promise((resolve) => setTimeout(resolve, 1000));
-      // If you want to actually implement it:
-      /*
-      return apiRequest(`${API_URL}/auth/settings`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeader(),
-        } as HeadersInit,
-        body: JSON.stringify(_values),
-      });
-      */
-    } catch (error) {
-      console.error('Update settings error:', error);
-      throw error;
+    // Store the token in localStorage if present
+    if (data.token) {
+      localStorage.setItem("token", data.token);
     }
+    
+    return data;
   },
+  
+  register: async (credentials: UserCredentials) => {
+    if (!credentials.username || !credentials.email || !credentials.password) {
+      throw new Error("Username, email and password required");
+    }
+    
+    const response = await fetch(`${BASE_URL}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: credentials.username,
+        email: credentials.email,
+        password: credentials.password
+      }),
+    });
+    
+    const data = await handleResponse(response);
+    
+    // Store the token in localStorage if present
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+    }
+    
+    return data;
+  },
+  
+  // This method is called from AuthContext
+  getCurrentUser: async () => {
+    console.log("API.getCurrentUser called");
+    return API.getProfile();
+  },
+  
+  getProfile: async () => {
+    console.log("API.getProfile called");
+    const response = await fetch(`${BASE_URL}/auth/profile`, {
+      headers: createHeaders(),
+    });
+    return handleResponse(response);
+  },
+  
+  // Game endpoints
+  getGames: async (params = {}) => {
+    // Create a new object with only non-undefined values
+    const cleanParams: Record<string, string> = {};
+    
+    // Only add parameters that have actual values
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        cleanParams[key] = String(value);
+      }
+    });
+    
+    const queryString = new URLSearchParams(cleanParams).toString();
+    const url = queryString ? `${BASE_URL}/games?${queryString}` : `${BASE_URL}/games`;
+    
+    const response = await fetch(url, {
+      headers: createHeaders(),
+    });
+    return handleResponse(response) as Promise<Game[]>;
+  },
+  
+  getGame: async (id: string | number) => {
+    const response = await fetch(`${BASE_URL}/games/${id}`, {
+      headers: createHeaders(),
+    });
+    
+    // Handle 404 specially
+    if (response.status === 404) {
+      return null;
+    }
+    
+    return handleResponse(response) as Promise<Game>;
+  },
+  
+  // Genres endpoint
+  getGenres: async () => {
+    const response = await fetch(`${BASE_URL}/genres`, {
+      headers: createHeaders(),
+    });
+    return handleResponse(response) as Promise<string[]>;
+  },
+  
+  // Companies endpoint
+  getCompanies: async () => {
+    const response = await fetch(`${BASE_URL}/companies`, {
+      headers: createHeaders(),
+    });
+    return handleResponse(response);
+  },
+  
+  getCompany: async (id: string | number) => {
+    const response = await fetch(`${BASE_URL}/companies/${id}`, {
+      headers: createHeaders(),
+    });
+    return handleResponse(response);
+  },
+  
+  // Tags endpoint
+  getTags: async () => {
+    const response = await fetch(`${BASE_URL}/tags`, {
+      headers: createHeaders(),
+    });
+    return handleResponse(response);
+  },
+  
+  // Review endpoints
+  getReviews: async (gameId?: string | number) => {
+    const url = gameId 
+      ? `${BASE_URL}/reviews?gameId=${gameId}` 
+      : `${BASE_URL}/reviews`;
+      
+    const response = await fetch(url, {
+      headers: createHeaders(),
+    });
+    return handleResponse(response) as Promise<Review[]>;
+  },
+  
+  getUserReviews: async (userId?: string | number) => {
+    const url = userId
+      ? `${BASE_URL}/reviews/user/${userId}`
+      : `${BASE_URL}/reviews/user`;
+    
+    const response = await fetch(url, {
+      headers: createHeaders(),
+    });
+    return handleResponse(response) as Promise<Review[]>;
+  },
+  
+  getReview: async (id: string | number) => {
+    const response = await fetch(`${BASE_URL}/reviews/${id}`, {
+      headers: createHeaders(),
+    });
+    return handleResponse(response) as Promise<Review>;
+  },
+  
+  addReview: async (gameId: string | number, rating: number, comment: string) => {
+    const response = await fetch(`${BASE_URL}/reviews`, {
+      method: "POST",
+      headers: createHeaders(),
+      body: JSON.stringify({ gameId, rating, comment }),
+    });
+    return handleResponse(response) as Promise<Review>;
+  },
+  
+  updateReview: async (id: string | number, rating: number, comment: string) => {
+    const response = await fetch(`${BASE_URL}/reviews/${id}`, {
+      method: "PUT",
+      headers: createHeaders(),
+      body: JSON.stringify({ rating, comment }),
+    });
+    return handleResponse(response) as Promise<Review>;
+  },
+  
+  deleteReview: async (id: string | number) => {
+    const response = await fetch(`${BASE_URL}/reviews/${id}`, {
+      method: "DELETE",
+      headers: createHeaders(),
+    });
+    return handleResponse(response);
+  }
 };
-
-export default API;

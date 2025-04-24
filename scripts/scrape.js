@@ -128,7 +128,7 @@ function saveToSQLFile(data) {
         '${companyId}',
         '${game.genre}',
         '${game.description.replace(/'/g, "''")}',
-        '${game.release_date}',
+        '${game.releaseDate}',
         'https://picsum.photos/seed/${game.title.replace(/\s+/g, '')}/300/200'
       );\n`;
     });
