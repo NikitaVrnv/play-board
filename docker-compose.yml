@@ -1,0 +1,65 @@
+
+version: '3.8'
+
+services:
+  # Database service
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: games_review_board
+      MYSQL_USER: gamesuser
+      MYSQL_PASSWORD: gamespassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./migrations:/docker-entrypoint-initdb.d
+    networks:
+      - app-network
+
+  # Backend API service
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_USER: gamesuser
+      DB_PASSWORD: gamespassword
+      DB_NAME: games_review_board
+      JWT_SECRET: your_jwt_secret_key_here
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - app-network
+
+  # Frontend service
+  frontend:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+    environment:
+      VITE_API_URL: http://api:3000
+    networks:
+      - app-network
+
+volumes:
+  db-data:
+
+networks:
+  app-network:
+    driver: bridge

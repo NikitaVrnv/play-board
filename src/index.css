@@ -1,0 +1,165 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light mode colors */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Primary - Ylands blue */
+    --primary: 201 88% 55%; /* rgb(48 160 235) */
+    --primary-foreground: 210 40% 98%;
+
+    /* Secondary - Pink/Magenta */
+    --secondary: 342 66% 55%; /* rgb(209 71 106) */
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 210 40% 93%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Ylands accent blue */
+    --accent: 201 88% 65%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 201 88% 55%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 214 32% 96%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 201 88% 55%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 346 77% 49%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 201 88% 55%;
+  }
+
+  .dark {
+    /* Dark mode colors */
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 14%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 14%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Primary - Ylands blue */
+    --primary: 201 88% 55%; /* rgb(48 160 235) */
+    --primary-foreground: 222 47% 11%;
+
+    /* Secondary - Pink/Magenta */
+    --secondary: 342 66% 55%; /* rgb(209 71 106) */
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 223 47% 20%;
+    --muted-foreground: 215 20% 75%;
+
+    /* Ylands accent blue */
+    --accent: 201 88% 65%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 223 47% 20%;
+    --input: 223 47% 20%;
+    --ring: 201 88% 55%;
+
+    --sidebar-background: 222 47% 8%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 201 88% 55%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 346 77% 49%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 223 47% 20%;
+    --sidebar-ring: 201 88% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted/30 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-accent/70 rounded-full hover:bg-accent/90 transition-colors;
+  }
+}
+
+@layer utilities {
+  .game-card {
+    @apply bg-card rounded-lg overflow-hidden border border-muted/50 shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-1;
+  }
+
+  .rating-star {
+    @apply w-5 h-5 text-yellow-400;
+  }
+
+  .rating-inactive {
+    @apply text-muted;
+  }
+  
+  /* Ylands specific utilities */
+  .ylands-gradient {
+    @apply bg-gradient-to-r from-blue-500 to-cyan-400;
+  }
+  
+  .ylands-button {
+    @apply bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors duration-200;
+  }
+  
+  .edu-highlight {
+    @apply border-l-4 border-blue-500 pl-4 py-2;
+  }
+
+  /* Star animations */
+  @keyframes star-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+  }
+  
+  @keyframes star-fill {
+    0% { fill-opacity: 0; }
+    100% { fill-opacity: 1; }
+  }
+  
+  .star-animate-pulse {
+    animation: star-pulse 0.5s ease-in-out;
+  }
+  
+  .star-animate-fill {
+    animation: star-fill 0.3s ease-out forwards;
+  }
+}
